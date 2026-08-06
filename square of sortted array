@@ -1,0 +1,32 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+/**
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+int* sortedSquares(int* nums, int numsSize, int* returnSize) {
+    // Step 1: Allocate memory for the output array
+    int* result = (int*)malloc(numsSize * sizeof(int));
+    *returnSize = numsSize;
+
+    int left = 0;
+    int right = numsSize - 1;
+    int p = numsSize - 1; // Placement pointer at the back of the result array
+
+    // Step 2: Compare extreme values and place the larger square at the back
+    while (left <= right) {
+        int left_square = nums[left] * nums[left];
+        int right_square = nums[right] * nums[right];
+
+        if (left_square > right_square) {
+            result[p] = left_square;
+            left++;
+        } else {
+            result[p] = right_square;
+            right--;
+        }
+        p--;
+    }
+
+    return result;
+}
