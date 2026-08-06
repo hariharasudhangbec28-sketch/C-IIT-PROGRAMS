@@ -1,0 +1,59 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+/**
+ * Return an array of arrays of size *returnSize.
+ * The sizes of the arrays are returned as *returnColumnSizes array.
+ * Note: Both returned array and *columnSizes array must be MALLOCED, not returned from a local variable.
+ */
+int** generateMatrix(int n, int* returnSize, int** returnColumnSizes) {
+    // Step 1: Allocate memory for the n x n matrix rows
+    int** matrix = (int**)malloc(n * sizeof(int*));
+    *returnColumnSizes = (int*)malloc(n * sizeof(int));
+    
+    for (int i = 0; i < n; i++) {
+        matrix[i] = (int*)malloc(n * sizeof(int));
+        (*returnColumnSizes)[i] = n; // Each row has exactly n columns
+    }
+    
+    // Step 2: Initialize boundaries and the counter
+    int top = 0, bottom = n - 1;
+    int left = 0, right = n - 1;
+    int counter = 1;
+    
+    // Step 3: Loop to fill the matrix layer by layer
+    while (top <= bottom && left <= right) {
+        // Traverse Left to Right along the current Top row
+        for (int i = left; i <= right; i++) {
+            matrix[top][i] = counter++;
+        }
+        top++; // Contract the top boundary downward
+        
+        // Traverse Top to Bottom along the current Right column
+        for (int i = top; i <= bottom; i++) {
+            matrix[i][right] = counter++;
+        }
+        right--; // Contract the right boundary leftward
+        
+        // Check if there are still rows remaining to prevent double-filling
+        if (top <= bottom) {
+            // Traverse Right to Left along the current Bottom row
+            for (int i = right; i >= left; i--) {
+                matrix[bottom][i] = counter++;
+            }
+            bottom--; // Contract the bottom boundary upward
+        }
+        
+        // Check if there are still columns remaining to prevent double-filling
+        if (left <= right) {
+            // Traverse Bottom to Top along the current Left column
+            for (int i = bottom; i >= top; i--) {
+                matrix[i][left] = counter++;
+            }
+            left++; // Contract the left boundary rightward
+        }
+    }
+    
+    *returnSize = n;
+    return matrix;
+}
