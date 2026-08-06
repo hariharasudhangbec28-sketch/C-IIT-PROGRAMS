@@ -1,0 +1,57 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+int maxRectangleArea(int** points, int pointsSize, int* pointsColSize) {
+    long long max_area = -1;
+
+    // Step 1: Iterate through all pairs of points
+    for (int i = 0; i < pointsSize; i++) {
+        for (int j = 0; j < pointsSize; j++) {
+            // Treat points[i] as bottom-left and points[j] as top-right
+            int x1 = points[i][0], y1 = points[i][1];
+            int x2 = points[j][0], y2 = points[j][1];
+
+            // Ensure a valid non-zero axis-aligned diagonal orientation
+            if (x1 >= x2 || y1 >= y2) {
+                continue;
+            }
+
+            bool has_top_left = false;
+            bool has_bottom_right = false;
+            bool has_illegal_point = false;
+
+            // Step 2: Scan all other points to validate constraints
+            for (int k = 0; k < pointsSize; k++) {
+                if (k == i || k == j) continue;
+
+                int xk = points[k][0];
+                int yk = points[k][1];
+
+                // Check for the top-left corner node
+                if (xk == x1 && yk == y2) {
+                    has_top_left = true;
+                }
+                // Check for the bottom-right corner node
+                else if (xk == x2 && yk == y1) {
+                    has_bottom_right = true;
+                }
+                // Check if the point lies inside or on the border
+                else if (xk >= x1 && xk <= x2 && yk >= y1 && yk <= y2) {
+                    has_illegal_point = true;
+                    break; // Early breakout if a point violates the constraint
+                }
+            }
+
+            // Step 3: If all 4 corners exist and no points interfere, update max area
+            if (has_top_left && has_bottom_right && !has_illegal_point) {
+                long long current_area = (long long)(x2 - x1) * (y2 - y1);
+                if (current_area > max_area) {
+                    max_area = current_area;
+                }
+            }
+        }
+    }
+
+    return max_area;
+}
