@@ -1,0 +1,65 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MOD 1000000007
+
+// Global or dynamically sized Binary Indexed Tree array
+int* bit;
+int max_val;
+
+// Update function: adds val to the element at a given index
+void update(int idx, int val) {
+    while (idx <= max_val) {
+        bit[idx] += val;
+        idx += idx & -idx; // Move to the next responsible index
+    }
+}
+
+// Query function: returns the prefix sum from 1 to idx
+int query(int idx) {
+    int sum = 0;
+    while (idx > 0) {
+        sum += bit[idx];
+        idx -= idx & -idx; // Move to the parent index
+    }
+    return sum;
+}
+
+int createSortedArray(int* instructions, int instructionsSize) {
+    // Step 1: Find the maximum value in instructions to establish the BIT size boundary
+    max_val = 0;
+    for (int i = 0; i < instructionsSize; i++) {
+        if (instructions[i] > max_val) {
+            max_val = instructions[i];
+        }
+    }
+
+    // Step 2: Allocate and clear memory for the Fenwick Tree (+1 for 1-based indexing)
+    bit = (int*)calloc(max_val + 1, sizeof(int));
+    
+    long long total_cost = 0;
+
+    // Step 3: Loop through instructions to calculate insertion weights sequentially
+    for (int i = 0; i < instructionsSize; i++) {
+        int x = instructions[i];
+
+        // Number of elements currently in the container strictly less than x
+        int strictly_less = query(x - 1);
+
+        // Number of elements currently in the container strictly greater than x
+        // 'i' represents the total number of items already processed in the tree
+        int strictly_greater = i - query(x);
+
+        // Add the minimum of the two costs
+        int min_cost = (strictly_less < strictly_greater) ? strictly_less : strictly_greater;
+        total_cost = (total_cost + min_cost) % MOD;
+
+        // Update the Fenwick Tree by registering the presence of x
+        update(x, 1);
+    }
+
+    // Clean up allocated tree pointer
+    free(bit);
+
+    return (int)total_cost;
+}
