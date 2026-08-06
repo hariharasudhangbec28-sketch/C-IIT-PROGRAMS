@@ -1,0 +1,53 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Helper function to perform backtracking and generate combinations
+void backtrack(int start, int n, int k, int* current, int currentSize, int** result, int* returnSize, int* columnSizes) {
+    // Base Case: If the current combination size reaches k, add it to our result list
+    if (currentSize == k) {
+        result[*returnSize] = (int*)malloc(k * sizeof(int));
+        for (int i = 0; i < k; i++) {
+            result[*returnSize][i] = current[i];
+        }
+        columnSizes[*returnSize] = k;
+        (*returnSize)++;
+        return;
+    }
+
+    // Optimization: If the remaining elements available in the range are less 
+    // than what is needed to reach size k, stop searching.
+    for (int i = start; i <= n - (k - currentSize) + 1; i++) {
+        current[currentSize] = i; // Choose the number
+        backtrack(i + 1, n, k, current, currentSize + 1, result, returnSize, columnSizes); // Recurse
+        // Backtracking happens implicitly as current[currentSize] is overwritten in the next iteration
+    }
+}
+
+/**
+ * Return an array of arrays of size *returnSize.
+ * The sizes of the arrays are returned as *returnColumnSizes array.
+ * Note: Both returned array and *columnSizes array must be maleallocated, assume caller calls free().
+ */
+int** combine(int n, int k, int* returnSize, int** returnColumnSizes) {
+    // 1. Calculate the total number of combinations: nCr = n! / (k! * (n-k)!)
+    long long totalCombinations = 1;
+    for (int i = 1; i <= k; i++) {
+        totalCombinations = totalCombinations * (n - i + 1) / i;
+    }
+
+    // 2. Allocate memory for the overall result matrix and column tracker
+    int** result = (int**)malloc(totalCombinations * sizeof(int*));
+    *returnColumnSizes = (int*)malloc(totalCombinations * sizeof(int));
+    *returnSize = 0;
+
+    // 3. Temporary array to track the active combination pathway
+    int* current = (int*)malloc(k * sizeof(int));
+
+    // 4. Begin backtracking from 1
+    backtrack(1, n, k, current, 0, result, returnSize, *returnColumnSizes);
+
+    // Free the temporary pathway buffer
+    free(current);
+
+    return result;
+}
