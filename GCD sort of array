@@ -1,0 +1,103 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+// Global structures for DSU and Sieve mapping
+int* parent;
+int* spf; // Smallest Prime Factor
+
+// Standard DSU Find with Path Compression
+int findSet(int i) {
+    if (parent[i] == i)
+        return i;
+    return parent[i] = findSet(parent[i]);
+}
+
+// Standard DSU Union
+void unionSets(int i, int j) {
+    int rootI = findSet(i);
+    int rootJ = findSet(j);
+    if (rootI != rootJ) {
+        parent[rootI] = rootJ;
+    }
+}
+
+// Sieve of Eratosthenes to precompute Smallest Prime Factors
+void computeSPF(int max_val) {
+    spf = (int*)malloc((max_val + 1) * sizeof(int));
+    for (int i = 0; i <= max_val; i++) {
+        spf[i] = i;
+    }
+    for (int i = 2; i * i <= max_val; i++) {
+        if (spf[i] == i) { // i is prime
+            for (int j = i * i; j <= max_val; j += i) {
+                if (spf[j] == j) {
+                    spf[j] = i;
+                }
+            }
+        }
+    }
+}
+
+// Comparator function for qsort
+int compare(const void* a, const void* b) {
+    return (*(int*)a - *(int*)b);
+}
+
+bool gcdSort(int* nums, int numsSize) {
+    if (numsSize <= 1) return true;
+
+    // Step 1: Find the maximum element to allocate DSU size boundaries
+    int max_val = 0;
+    for (int i = 0; i < numsSize; i++) {
+        if (nums[i] > max_val) {
+            max_val = nums[i];
+        }
+    }
+
+    // Step 2: Initialize DSU parent array
+    parent = (int*)malloc((max_val + 1) * sizeof(int));
+    for (int i = 0; i <= max_val; i++) {
+        parent[i] = i;
+    }
+
+    // Compute smallest prime factors up to max_val
+    computeSPF(max_val);
+
+    // Step 3: Union each number with its prime factors
+    for (int i = 0; i < numsSize; i++) {
+        int val = nums[i];
+        int temp = val;
+        while (temp > 1) {
+            int factor = spf[temp];
+            unionSets(val, factor);
+            // Eliminate instances of the current prime factor
+            while (temp % factor == 0) {
+                temp /= factor;
+            }
+        }
+    }
+
+    // Step 4: Create a sorted clone copy of the original array
+    int* sorted_nums = (int*)malloc(numsSize * sizeof(int));
+    for (int i = 0; i < numsSize; i++) {
+        sorted_nums[i] = nums[i];
+    }
+    qsort(sorted_nums, numsSize, sizeof(int), compare);
+
+    // Step 5: Verify if out-of-place elements can reach their target sorted positions
+    bool possible = true;
+    for (int i = 0; i < numsSize; i++) {
+        if (findSet(nums[i]) != findSet(sorted_nums[i])) {
+            possible = false;
+            break;
+        }
+    }
+
+    // Clean up allocated heap memory structures
+    free(parent);
+    free(spf);
+    free(sorted_nums);
+
+    return possible;
+}
