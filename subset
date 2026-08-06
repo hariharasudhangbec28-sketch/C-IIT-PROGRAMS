@@ -1,0 +1,49 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Helper function to handle the recursive backtracking search
+void backtrack(int* nums, int numsSize, int start, int* current, int currentSize, 
+               int** result, int* returnSize, int* returnColumnSizes) {
+    
+    // Allocate and copy the current subset into the result matrix
+    result[*returnSize] = (int*)malloc(currentSize * sizeof(int));
+    memcpy(result[*returnSize], current, currentSize * sizeof(int));
+    returnColumnSizes[*returnSize] = currentSize;
+    (*returnSize)++;
+    
+    // Explore adding subsequent elements into the subset
+    for (int i = start; i < numsSize; i++) {
+        // Include the current element
+        current[currentSize] = nums[i];
+        
+        // Move deeper into the tree with the next element index
+        backtrack(nums, numsSize, i + 1, current, currentSize + 1, 
+                  result, returnSize, returnColumnSizes);
+    }
+}
+
+/**
+ * Return an array of arrays of size *returnSize.
+ * The sizes of the arrays are returned as *returnColumnSizes array.
+ */
+int** subsets(int* nums, int numsSize, int* returnSize, int** returnColumnSizes) {
+    // Total number of subsets in a power set is exactly 2^numsSize
+    int total_subsets = 1 << numsSize;
+    
+    // Allocate memory for the final list of subsets and column tracking map
+    int** result = (int**)malloc(total_subsets * sizeof(int*));
+    *returnColumnSizes = (int*)malloc(total_subsets * sizeof(int));
+    *returnSize = 0;
+    
+    // Temporary stack buffer to hold the active working subset
+    int* current = (int*)malloc(numsSize * sizeof(int));
+    
+    // Begin backtracking from index 0
+    backtrack(nums, numsSize, 0, current, 0, result, returnSize, *returnColumnSizes);
+    
+    // Free the temporary stack buffer
+    free(current);
+    
+    return result;
+}
