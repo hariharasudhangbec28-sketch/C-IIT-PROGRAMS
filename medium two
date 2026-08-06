@@ -1,0 +1,61 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <limits.h>
+
+char* minWindow(char* s, char* t) {
+    int need[128] = {0};
+    int window[128] = {0};
+    
+    int t_len = strlen(t);
+    int s_len = strlen(s);
+    
+    for (int i = 0; i < t_len; i++) {
+        need[(unsigned char)t[i]]++;
+    }
+    
+    int required = 0;
+    for (int i = 0; i < 128; i++) {
+        if (need[i] > 0) required++;
+    }
+    
+    int formed = 0;
+    int l = 0, r = 0;
+    int min_len = INT_MAX;
+    int head = 0;
+    
+    while (r < s_len) {
+        char c = s[r];
+        window[(unsigned char)c]++;
+        
+        if (need[(unsigned char)c] > 0 && window[(unsigned char)c] == need[(unsigned char)c]) {
+            formed++;
+        }
+        
+        while (l <= r && formed == required) {
+            if (r - l + 1 < min_len) {
+                min_len = r - l + 1;
+                head = l;
+            }
+            
+            char left_c = s[l];
+            window[(unsigned char)left_c]--;
+            if (need[(unsigned char)left_c] > 0 && window[(unsigned char)left_c] < need[(unsigned char)left_c]) {
+                formed--;
+            }
+            l++;
+        }
+        r++;
+    }
+    
+    if (min_len == INT_MAX) {
+        char* res = (char*)malloc(1);
+        res[0] = '\0';
+        return res;
+    }
+    
+    char* res = (char*)malloc(min_len + 1);
+    strncpy(res, s + head, min_len);
+    res[min_len] = '\0';
+    return res;
+}
