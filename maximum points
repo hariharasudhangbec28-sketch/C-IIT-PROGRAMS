@@ -1,0 +1,86 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Structure to implement a fast array-based adjacency list
+struct Edge {
+    int to;
+    int next;
+};
+
+// Depth-First Search with Memoization
+int dfs(int u, int p, int halves, int (*memo)[15], int* coins, int k, int* head, struct Edge* edges_list) {
+    // Cap halves at 14 because shifting right any more keeps the coin value at 0
+    if (halves > 14) {
+        halves = 14;
+    }
+    
+    // Return cached result if already computed
+    if (memo[u][halves] != -1) {
+        return memo[u][halves];
+    }
+    
+    // Calculate the current node's coin value after previous ancestral halvings
+    int current_coins = coins[u] >> halves;
+    
+    // Strategy 1: Collect coins[u] - k points (Subtree is unaffected)
+    int res1 = current_coins - k;
+    
+    // Strategy 2: Collect floor(coins[u] / 2) points (Subtree is halved)
+    int res2 = current_coins / 2;
+    
+    // Traverse all adjacent child nodes in the tree
+    for (int e = head[u]; e != -1; e = edges_list[e].next) {
+        int v = edges_list[e].to;
+        if (v != p) {
+            res1 += dfs(v, u, halves, memo, coins, k, head, edges_list);
+            res2 += dfs(v, u, halves + 1, memo, coins, k, head, edges_list);
+        }
+    }
+    
+    // Memoize and return the maximum points possible from node u
+    return memo[u][halves] = (res1 > res2) ? res1 : res2;
+}
+
+int maximumPoints(int** edges, int edgesSize, int* edgesColSize, int* coins, int coinsSize, int k) {
+    int n = coinsSize;
+    
+    // Step 1: Initialize adjacency list pointers
+    int* head = (int*)malloc(n * sizeof(int));
+    for (int i = 0; i < n; i++) head[i] = -1;
+    
+    struct Edge* edges_list = (struct Edge*)malloc(2 * edgesSize * sizeof(struct Edge));
+    int edge_count = 0;
+    
+    // Build the bidirectional tree edges network
+    for (int i = 0; i < edgesSize; i++) {
+        int u = edges[i][0];
+        int v = edges[i][1];
+        
+        edges_list[edge_count].to = v;
+        edges_list[edge_count].next = head[u];
+        head[u] = edge_count++;
+        
+        edges_list[edge_count].to = u;
+        edges_list[edge_count].next = head[v];
+        head[v] = edge_count++;
+    }
+    
+    // Step 2: Allocate and clear the memoization grid matrix of size N x 15
+    int (*memo)[15] = (int (*)[15])malloc(n * sizeof(*memo));
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < 15; j++) {
+            memo[i][j] = -1;
+        }
+    }
+    
+    // Step 3: Start DFS traversal from root node 0 with 0 ancestral halvings
+    int max_points = dfs(0, -1, 0, memo, coins, k, head, edges_list);
+    
+    // Step 4: Safely release allocated block heaps
+    free(head);
+    free(edges_list);
+    free(memo);
+    
+    return max_points;
+}
