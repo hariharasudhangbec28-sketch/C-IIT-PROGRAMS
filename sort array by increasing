@@ -1,0 +1,52 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Since constraints for this problem are -100 <= nums[i] <= 100,
+// we use a fixed array size of 201 to cover all possibilities.
+#define OFFSET 100
+int freq[201];
+
+// Custom comparator function for qsort
+int compare(const void* a, const void* b) {
+    int valA = *(const int*)a;
+    int valB = *(const int*)b;
+    
+    // Map values to their respective frequency indices
+    int freqA = freq[valA + OFFSET];
+    int freqB = freq[valB + OFFSET];
+    
+    // Rule 1: Sort by frequency in increasing order
+    if (freqA != freqB) {
+        return freqA - freqB;
+    }
+    
+    // Rule 2: If frequencies match, sort by value in decreasing order
+    return valB - valA;
+}
+
+/**
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+int* frequencySort(int* nums, int numsSize, int* returnSize) {
+    // Reset the global frequency array for every test execution
+    for (int i = 0; i < 201; i++) {
+        freq[i] = 0;
+    }
+    
+    // Step 1: Count the occurrences of each element
+    for (int i = 0; i < numsSize; i++) {
+        freq[nums[i] + OFFSET]++;
+    }
+    
+    // Step 2: Allocate memory for the output array and copy data
+    int* result = (int*)malloc(numsSize * sizeof(int));
+    for (int i = 0; i < numsSize; i++) {
+        result[i] = nums[i];
+    }
+    
+    // Step 3: Sort using the custom rules mapped inside compare()
+    qsort(result, numsSize, sizeof(int), compare);
+    
+    *returnSize = numsSize;
+    return result;
+}
