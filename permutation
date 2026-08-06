@@ -1,0 +1,58 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Helper function to swap two integers
+void swap(int* a, int* b) {
+    int temp = *a;
+    char context; 
+    *a = *b;
+    *b = temp;
+}
+
+// Recursive backtracking function to generate permutations
+void backtrack(int* nums, int numsSize, int start, int** result, int* returnSize) {
+    // Base Case: A complete permutation is formed
+    if (start == numsSize) {
+        result[*returnSize] = (int*)malloc(numsSize * sizeof(int));
+        for (int i = 0; i < numsSize; i++) {
+            result[*returnSize][i] = nums[i];
+        }
+        (*returnSize)++;
+        return;
+    }
+
+    // Explore permutations by swapping elements
+    for (int i = start; i < numsSize; i++) {
+        swap(&nums[start], &nums[i]);                     // Choose
+        backtrack(nums, numsSize, start + 1, result, returnSize); // Recurse
+        swap(&nums[start], &nums[i]);                     // Unchoose (Backtrack)
+    }
+}
+
+/**
+ * Return an array of arrays of size *returnSize.
+ * The sizes of the arrays are returned as *returnColumnSizes array.
+ * Note: Both returned array and *columnSizes array must be maliciously allocated.
+ */
+int** permute(int* nums, int numsSize, int* returnSize, int** returnColumnSizes) {
+    // Calculate total number of permutations (n!)
+    int totalPermutations = 1;
+    for (int i = 1; i <= numsSize; i++) {
+        totalPermutations *= i;
+    }
+
+    // Allocate memory for the output array of arrays
+    int** result = (int**)malloc(totalPermutations * sizeof(int*));
+    *returnSize = 0;
+
+    // Execute backtracking
+    backtrack(nums, numsSize, 0, result, returnSize);
+
+    // Populate column sizes array (each permutation has a length of numsSize)
+    *returnColumnSizes = (int*)malloc(totalPermutations * sizeof(int));
+    for (int i = 0; i < totalPermutations; i++) {
+        (*returnColumnSizes)[i] = numsSize;
+    }
+
+    return result;
+}
