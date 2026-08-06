@@ -1,0 +1,53 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
+int countLatticePoints(int** circles, int circlesSize, int* circlesColSize) {
+    if (circlesSize == 0) {
+        return 0;
+    }
+
+    // Step 1: Find the global bounding box containing all circles
+    int min_x = 200, max_x = 0;
+    int min_y = 200, max_y = 0;
+
+    for (int i = 0; i < circlesSize; i++) {
+        int x = circles[i][0];
+        int y = circles[i][1];
+        int r = circles[i][2];
+
+        min_x = MIN(min_x, x - r);
+        max_x = MAX(max_x, x + r);
+        min_y = MIN(min_y, y - r);
+        max_y = MAX(max_y, y + r);
+    }
+
+    int lattice_points_count = 0;
+
+    // Step 2: Iterate through every integer point within the bounding box
+    for (int x = min_x; x <= max_x; x++) {
+        for (int y = min_y; y <= max_y; y++) {
+            
+            // Step 3: Check if the point lies inside at least one circle
+            for (int i = 0; i < circlesSize; i++) {
+                int cx = circles[i][0];
+                int cy = circles[i][1];
+                int cr = circles[i][2];
+
+                // Euclidean distance squared formula
+                int dx = x - cx;
+                int dy = y - cy;
+                
+                if (dx * dx + dy * dy <= cr * cr) {
+                    lattice_points_count++;
+                    break; // Move to the next point immediately to avoid double counting
+                }
+            }
+        }
+    }
+
+    return lattice_points_count;
+}
