@@ -1,0 +1,52 @@
+#include <stdbool.h>
+#include <string.h>
+
+// Helper function to perform backtracking DFS
+bool dfs(char** board, int boardSize, int* boardColSize, int r, int c, const char* word, int index) {
+    // Base Case: If we matched all characters in the word, we found it!
+    if (word[index] == '\0') {
+        return true;
+    }
+
+    // Boundary check and character mismatch check
+    if (r < 0 || r >= boardSize || c < 0 || c >= boardColSize[r] || board[r][c] != word[index]) {
+        return false;
+    }
+
+    // Mark the current cell as visited by storing its value and overriding it
+    char temp = board[r][c];
+    board[r][c] = '#';
+
+    // Explore all 4 adjacent directions: Up, Down, Left, Right
+    bool found = dfs(board, boardSize, boardColSize, r + 1, c, word, index + 1) ||
+                 dfs(board, boardSize, boardColSize, r - 1, c, word, index + 1) ||
+                 dfs(board, boardSize, boardColSize, r, c + 1, word, index + 1) ||
+                 dfs(board, boardSize, boardColSize, r, c - 1, word, index + 1);
+
+    // Backtrack: Restore the original character for other search paths
+    board[r][c] = temp;
+
+    return found;
+}
+
+// Main function required by the problem signature
+bool exist(char** board, int boardSize, int* boardColSize, char* word) {
+    // If the word string is empty, it trivially exists
+    if (word == NULL || strlen(word) == 0) {
+        return true;
+    }
+
+    // Scan every cell in the grid to look for the first letter of the word
+    for (int r = 0; r < boardSize; r++) {
+        for (int c = 0; c < boardColSize[r]; c++) {
+            // Trigger DFS if the starting character matches
+            if (board[r][c] == word[0]) {
+                if (dfs(board, boardSize, boardColSize, r, c, word, 0)) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
