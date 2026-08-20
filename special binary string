@@ -1,0 +1,67 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Comparator function to sort strings lexicographically in descending order
+int compareStrings(const void* a, const void* b) {
+    return strcmp(*(const char**)b, *(const char**)a);
+}
+
+char* makeLargestSpecial(char* s) {
+    int len = strlen(s);
+    if (len <= 2) {
+        return s; // "10" or empty string cannot be further optimized
+    }
+
+    // Allocate an array of strings to hold split special substrings
+    char** substrings = (char**)malloc(len * sizeof(char*));
+    int subCount = 0;
+
+    int count = 0;
+    int start = 0;
+
+    // 1. Split s into its top-level independent special substrings
+    for (int i = 0; i < len; i++) {
+        if (s[i] == '1') count++;
+        else count--;
+
+        if (count == 0) {
+            // Found a top-level special substring from index 'start' to 'i'
+            int subLen = i - start + 1;
+            
+            // Extract the inner content: strip the outer '1' and '0'
+            char* inner = (char*)malloc((subLen - 1) * sizeof(char));
+            strncpy(inner, s + start + 1, subLen - 2);
+            inner[subLen - 2] = '\0';
+
+            // 2. Recursively optimize the inner sequence
+            char* processedInner = makeLargestSpecial(inner);
+
+            // 3. Wrap back with outer '1' and '0'
+            char* rewrapped = (char*)malloc((subLen + 1) * sizeof(char));
+            sprintf(rewrapped, "1%s0", processedInner);
+
+            substrings[subCount++] = rewrapped;
+            
+            // Clean up temporary inner string if it was newly allocated
+            if (processedInner != inner) free(processedInner);
+            free(inner);
+
+            start = i + 1;
+        }
+    }
+
+    // 4. Sort the independent special blocks in descending lexicographical order
+    qsort(substrings, subCount, sizeof(char*), compareStrings);
+
+    // 5. Join the sorted blocks back into a single string
+    char* result = (char*)malloc((len + 1) * sizeof(char));
+    result[0] = '\0';
+    for (int i = 0; i < subCount; i++) {
+        strcat(result, substrings[i]);
+        free(substrings[i]); // Clean up substring memory
+    }
+    free(substrings);
+
+    return result;
+}
