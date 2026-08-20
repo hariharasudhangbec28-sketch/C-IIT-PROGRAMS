@@ -1,0 +1,11 @@
+#include <stdio.h>
+
+double nthPersonGetsNthSeat(int n) {
+    // If there is only 1 passenger and 1 seat, they are guaranteed to get it.
+    if (n == 1) {
+        return 1.0;
+    }
+    
+    // For any number of passengers greater than 1, the probability is always 0.5.
+    return 0.5;
+}
