@@ -1,0 +1,21 @@
+#include <stdio.h>
+
+int numTrees(int n) {
+    // dp[i] will store the number of unique BSTs with i nodes
+    int dp[n + 1];
+    
+    // Base cases
+    dp[0] = 1; // Empty tree
+    dp[1] = 1; // Tree with 1 node
+    
+    // Fill the DP table iteratively
+    for (int i = 2; i <= n; i++) {
+        dp[i] = 0;
+        for (int j = 1; j <= i; j++) {
+            // j represents the root node chosen
+            dp[i] += dp[j - 1] * dp[i - j];
+        }
+    }
+    
+    return dp[n];
+}
