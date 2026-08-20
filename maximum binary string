@@ -1,0 +1,45 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+char* maximumBinaryString(char* binary) {
+    int len = strlen(binary);
+    
+    // Find the index of the very first '0'
+    int firstZero = -1;
+    for (int i = 0; i < len; i++) {
+        if (binary[i] == '0') {
+            firstZero = i;
+            break;
+        }
+    }
+    
+    // If there are no zeros in the string, it is already maximized
+    if (firstZero == -1) {
+        return binary;
+    }
+    
+    // Count how many zeros exist from the first zero onwards
+    int zeroCount = 0;
+    for (int i = firstZero; i < len; i++) {
+        if (binary[i] == '0') {
+            zeroCount++;
+        }
+    }
+    
+    // Reconstruct the string in-place:
+    // 1. Everything before firstZero remains '1'
+    // 2. The block of zeros condenses. With 'zeroCount' zeros, 
+    //    we can turn (zeroCount - 1) of them into '1's.
+    // 3. Place the single remaining '0' at index: firstZero + zeroCount - 1
+    // 4. Fill the remaining trailing positions with '1's.
+    for (int i = firstZero; i < len; i++) {
+        if (i == firstZero + zeroCount - 1) {
+            binary[i] = '0';
+        } else {
+            binary[i] = '1';
+        }
+    }
+    
+    return binary;
+}
