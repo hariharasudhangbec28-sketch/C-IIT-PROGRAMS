@@ -1,0 +1,13 @@
+#include <stdio.h>
+#include <stdbool.h>
+#include <string.h>
+
+bool checkOnesSegment(char* s) {
+    // A string with at most one contiguous segment of ones 
+    // cannot contain the pattern "01" anywhere inside it.
+    if (strstr(s, "01") != NULL) {
+        return false;
+    }
+    
+    return true;
+}
