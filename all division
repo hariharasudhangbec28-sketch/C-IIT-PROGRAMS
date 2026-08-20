@@ -1,0 +1,53 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+/**
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+int* maxScoreIndices(int* nums, int numsSize, int* returnSize) {
+    // Pass 1: Count the total number of 1s in the entire array
+    int totalOnes = 0;
+    for (int i = 0; i < numsSize; i++) {
+        if (nums[i] == 1) {
+            totalOnes++;
+        }
+    }
+
+    // Allocate an initial results buffer array (can hold up to numsSize + 1 indices)
+    int* result = (int*)malloc(sizeof(int) * (numsSize + 1));
+    int count = 0;
+    
+    int leftZeros = 0;
+    int leftOnes = 0;
+    int maxScore = -1;
+
+    // Pass 2: Evaluate the division score at every possible split index i from 0 to n
+    for (int i = 0; i <= numsSize; i++) {
+        // numsright count of 1s is equal to (total 1s - 1s passed to the left)
+        int rightOnes = totalOnes - leftOnes;
+        int currentScore = leftZeros + rightOnes;
+
+        // If we find a higher score, clear previous results and update maxScore
+        if (currentScore > maxScore) {
+            maxScore = currentScore;
+            count = 0; // Reset index collection
+            result[count++] = i;
+        } 
+        // If the score matches the highest score found so far, append the index
+        else if (currentScore == maxScore) {
+            result[count++] = i;
+        }
+
+        // Update prefix counts for the next iteration step (before index i moves right)
+        if (i < numsSize) {
+            if (nums[i] == 0) {
+                leftZeros++;
+            } else {
+                leftOnes++;
+            }
+        }
+    }
+
+    *returnSize = count;
+    return result;
+}
