@@ -1,0 +1,26 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+// Comparator function for qsort to sort integers in ascending order
+int compareIntegers(const void* a, const void* b) {
+    int valA = *(const int*)a;
+    int valB = *(const int*)b;
+    return (valA > valB) - (valA < valB);
+}
+
+// Main function required by the problem signature
+int minMovesToSeat(int* seats, int seatsSize, int* students, int studentsSize) {
+    // Step 1: Sort both seats and students in ascending order
+    qsort(seats, seatsSize, sizeof(int), compareIntegers);
+    qsort(students, studentsSize, sizeof(int), compareIntegers);
+    
+    int totalMoves = 0;
+    
+    // Step 2: Accumulate the absolute difference between paired pairs
+    for (int i = 0; i < seatsSize; i++) {
+        totalMoves += abs(seats[i] - students[i]);
+    }
+    
+    return totalMoves;
+}
