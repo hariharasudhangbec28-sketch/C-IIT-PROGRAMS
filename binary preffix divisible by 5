@@ -1,0 +1,27 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+/**
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+bool* prefixesDivBy5(int* nums, int numsSize, int* returnSize) {
+    // 1. Set the size of the returning array
+    *returnSize = numsSize;
+    
+    // 2. Allocate memory for the boolean result array
+    bool* answer = (bool*)malloc(numsSize * sizeof(bool));
+    
+    int current_remainder = 0;
+    
+    // 3. Iterate through the binary array and update remainder dynamically
+    for (int i = 0; i < numsSize; i++) {
+        // Shift left by 1 (multiply by 2) and add the new bit, then modulo 5
+        current_remainder = (current_remainder * 2 + nums[i]) % 5;
+        
+        // If the remainder is 0, the number is divisible by 5
+        answer[i] = (current_remainder == 0);
+    }
+    
+    return answer;
+}
