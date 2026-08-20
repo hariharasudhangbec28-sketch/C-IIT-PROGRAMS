@@ -1,0 +1,24 @@
+#include <stdio.h>
+
+int findDuplicate(int* nums, int numsSize) {
+    // Phase 1: Detect that a cycle exists using fast and slow pointers
+    int tortoise = nums[0];
+    int hare = nums[0];
+    
+    // Move pointers until they intersect inside the loop
+    do {
+        tortoise = nums[tortoise];          // Moves 1 step
+        hare = nums[nums[hare]];            // Moves 2 steps
+    } while (tortoise != hare);
+    
+    // Phase 2: Locate the entrance of the cycle (the duplicate number)
+    hare = nums[0]; // Reset hare to the beginning of the array
+    
+    // Move both pointers 1 step at a time until they meet
+    while (tortoise != hare) {
+        tortoise = nums[tortoise];
+        hare = nums[hare];
+    }
+    
+    return tortoise; // Or return hare; both point to the duplicate number
+}
