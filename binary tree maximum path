@@ -1,0 +1,40 @@
+#include <limits.h>
+
+int max(int a, int b)
+{
+    return (a > b) ? a : b;
+}
+
+int maxPath(struct TreeNode* root, int* answer)
+{
+    if (root == NULL)
+        return 0;
+
+    int left = maxPath(root->left, answer);
+    int right = maxPath(root->right, answer);
+
+    // Ignore negative paths
+    if (left < 0)
+        left = 0;
+
+    if (right < 0)
+        right = 0;
+
+    // Path passing through current node
+    int current = root->val + left + right;
+
+    if (current > *answer)
+        *answer = current;
+
+    // Return the best one-sided path
+    return root->val + max(left, right);
+}
+
+int maxPathSum(struct TreeNode* root)
+{
+    int answer = INT_MIN;
+
+    maxPath(root, &answer);
+
+    return answer;
+}
