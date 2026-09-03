@@ -1,0 +1,73 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int getHeight(struct TreeNode *root)
+{
+    if (root == NULL)
+        return -1;
+
+    int left = getHeight(root->left);
+    int right = getHeight(root->right);
+
+    return (left > right ? left : right) + 1;
+}
+
+void fillMatrix(struct TreeNode *root, char ***res,
+                int row, int col, int height)
+{
+    if (root == NULL)
+        return;
+
+    char value[20];
+    sprintf(value, "%d", root->val);
+
+    res[row][col] = (char *)malloc(strlen(value) + 1);
+    strcpy(res[row][col], value);
+
+    if (root->left != NULL)
+    {
+        int newCol = col - (1 << (height - row - 1));
+        fillMatrix(root->left, res, row + 1, newCol, height);
+    }
+
+    if (root->right != NULL)
+    {
+        int newCol = col + (1 << (height - row - 1));
+        fillMatrix(root->right, res, row + 1, newCol, height);
+    }
+}
+
+char*** printTree(struct TreeNode* root, int* returnSize, int** returnColumnSizes)
+{
+    int height = getHeight(root);
+
+    int rows = height + 1;
+    int cols = (1 << (height + 1)) - 1;
+
+    *returnSize = rows;
+
+    *returnColumnSizes = (int *)malloc(rows * sizeof(int));
+
+    char ***res = (char ***)malloc(rows * sizeof(char **));
+
+    for (int i = 0; i < rows; i++)
+    {
+        (*returnColumnSizes)[i] = cols;
+
+        res[i] = (char **)malloc(cols * sizeof(char *));
+
+        for (int j = 0; j < cols; j++)
+        {
+            res[i][j] = (char *)malloc(1);
+            res[i][j][0] = '\0';
+        }
+    }
+
+    if (root != NULL)
+    {
+        fillMatrix(root, res, 0, (cols - 1) / 2, height);
+    }
+
+    return res;
+}
