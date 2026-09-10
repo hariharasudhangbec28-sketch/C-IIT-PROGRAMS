@@ -1,0 +1,44 @@
+#include <stdio.h>
+#include <string.h>
+
+int numberOfArrays(char* s, int k) {
+    int n = strlen(s);
+    int MOD = 1000000007;
+    
+    // dp[i] stores the number of valid arrays for the suffix s[i...n-1]
+    // We use a dynamic array or a static array if size bounds are known.
+    // Given standard constraints (strlen <= 10^5), an array of size n + 1 is required.
+    int* dp = (int*)calloc(n + 1, sizeof(int));
+    
+    // Base case: An empty suffix forms exactly 1 valid configuration
+    dp[n] = 1; 
+
+    // Traverse the string backwards from the last character to the first
+    for (int i = n - 1; i >= 0; i--) {
+        // Condition: No leading zeros allowed
+        if (s[i] == '0') {
+            dp[i] = 0;
+            continue;
+        }
+
+        long long currentNum = 0;
+        
+        // Form numbers starting at index i
+        for (int j = i; j < n; j++) {
+            currentNum = currentNum * 10 + (s[j] - '0');
+            
+            // Optimization: If the number exceeds k, any longer number starting here will also exceed k
+            if (currentNum > k) {
+                break;
+            }
+            
+            // Accumulate the combinations from the remaining suffix
+            dp[i] = (dp[i] + dp[j + 1]) % MOD;
+        }
+    }
+
+    int result = dp[0];
+    free(dp); // Clean up allocated memory
+    
+    return result;
+}
