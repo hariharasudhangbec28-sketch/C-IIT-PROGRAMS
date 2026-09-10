@@ -1,0 +1,24 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+/**
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+int* decode(int* encoded, int encodedSize, int first, int* returnSize) {
+    // The original array has exactly 1 more element than the encoded array
+    int n = encodedSize + 1;
+    *returnSize = n;
+    
+    int* arr = (int*)malloc(n * sizeof(int));
+    if (!arr) return NULL;
+
+    // Set the initial starting element
+    arr[0] = first;
+
+    // Linearly decode each subsequent element using XOR
+    for (int i = 0; i < encodedSize; i++) {
+        arr[i + 1] = arr[i] ^ encoded[i];
+    }
+
+    return arr;
+}
