@@ -1,0 +1,103 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define HASH_SIZE 10007 // A prime number for the hash table size
+
+// Structure for the hash map node
+typedef struct Node {
+    int key;       // Stores the prefix sum
+    int value;     // Stores the first index where this sum occurred
+    struct Node* next;
+}; struct Node;
+
+// Hash map structure
+typedef struct {
+    struct Node* buckets[HASH_SIZE];
+} HashMap;
+
+// Hash function to handle both positive and negative keys
+int hash(int key) {
+    int h = key % HASH_SIZE;
+    if (h < 0) h += HASH_SIZE;
+    return h;
+}
+
+// Insert key-value pair if it doesn't already exist
+void insert(HashMap* map, int key, int value) {
+    int idx = hash(key);
+    struct Node* curr = map->buckets[idx];
+    
+    // Check if key already exists
+    while (curr != NULL) {
+        if (curr->key == key) {
+            return; // We only care about the *first* occurrence
+        }
+        curr = curr->next;
+    }
+    
+    // Create a new node and prepend it to the bucket
+    struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
+    newNode->key = key;
+    newNode->value = value;
+    newNode->next = map->buckets[idx];
+    map->buckets[idx] = newNode;
+}
+
+// Find value by key, returns -2 if not found
+int find(HashMap* map, int key) {
+    int idx = hash(key);
+    struct Node* curr = map->buckets[idx];
+    while (curr != NULL) {
+        if (curr->key == key) {
+            return curr->value;
+        }
+        curr = curr->next;
+    }
+    return -2; // Key not found
+}
+
+// Free allocated memory for the hash map
+void freeMap(HashMap* map) {
+    for (int i = 0; i < HASH_SIZE; i++) {
+        struct Node* curr = map->buckets[i];
+        while (curr != NULL) {
+            struct Node* temp = curr;
+            curr = curr->next;
+            free(temp);
+        }
+    }
+}
+
+// Main function to find the maximum length
+int findMaxLength(int* nums, int numsSize) {
+    HashMap map;
+    for (int i = 0; i < HASH_SIZE; i++) {
+        map.buckets[i] = NULL;
+    }
+
+    // Base case: A prefix sum of 0 occurs at index -1
+    insert(&map, 0, -1);
+
+    int maxLen = 0;
+    int currentSum = 0;
+
+    for (int i = 0; i < numsSize; i++) {
+        // Treat 0 as -1, and 1 as +1
+        currentSum += (nums[i] == 1) ? 1 : -1;
+
+        int prevIdx = find(&map, currentSum);
+        if (prevIdx != -2) {
+            // If the sum has been seen before, calculate the subarray length
+            int len = i - prevIdx;
+            if (len > maxLen) {
+                maxLen = len;
+            }
+        } else {
+            // Store the first occurrence of this prefix sum
+            insert(&map, currentSum, i);
+        }
+    }
+
+    freeMap(&map);
+    return maxLen;
+}
