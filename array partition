@@ -1,0 +1,25 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Safe comparison function to prevent integer overflow
+int compare(const void* a, const void* b) {
+    int val1 = *(const int*)a;
+    int val2 = *(const int*)b;
+    if (val1 < val2) return -1;
+    if (val1 > val2) return 1;
+    return 0;
+}
+
+int arrayPairSum(int* nums, int numsSize) {
+    // Step 1: Sort the array
+    qsort(nums, numsSize, sizeof(int), compare);
+    
+    int sum = 0;
+    
+    // Step 2: Sum every element at an even index
+    for (int i = 0; i < numsSize; i += 2) {
+        sum += nums[i];
+    }
+    
+    return sum;
+}
