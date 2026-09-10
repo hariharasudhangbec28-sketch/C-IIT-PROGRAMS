@@ -1,0 +1,35 @@
+#include <stdio.h>
+
+int arrayNesting(int* nums, int numsSize) {
+    int maxLen = 0;
+
+    for (int i = 0; i < numsSize; i++) {
+        // If nums[i] is negative, it means this element has already been visited
+        if (nums[i] < 0) {
+            continue;
+        }
+
+        int count = 0;
+        int curr = i;
+
+        // Traverse the current cycle until we hit an already visited node
+        while (nums[curr] >= 0) {
+            int nextNode = nums[curr];
+            
+            // Mark the current node as visited by making it negative
+            // We use -1 to avoid conflicts with 0 index, but since elements are >= 0,
+            // we can just bitwise invert it or flag it.
+            nums[curr] = -1; 
+            
+            curr = nextNode;
+            count++;
+        }
+
+        // Keep track of the longest cycle length found so far
+        if (count > maxLen) {
+            maxLen = count;
+        }
+    }
+
+    return maxLen;
+}
