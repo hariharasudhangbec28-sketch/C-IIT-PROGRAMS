@@ -1,0 +1,22 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+/**
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+int* shuffle(int* nums, int numsSize, int n, int* returnSize) {
+    // The total size of the final array is 2 * n (which equals numsSize)
+    *returnSize = numsSize;
+    int* result = (int*)malloc(numsSize * sizeof(int));
+    if (!result) return NULL;
+
+    int idx = 0;
+    for (int i = 0; i < n; i++) {
+        // Place the x element from the first half
+        result[idx++] = nums[i];
+        // Place the corresponding y element from the second half
+        result[idx++] = nums[i + n];
+    }
+
+    return result;
+}
