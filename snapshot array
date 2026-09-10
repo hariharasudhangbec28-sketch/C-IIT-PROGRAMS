@@ -1,0 +1,100 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Structure to store a specific historical value update
+typedef struct {
+    int snap_id;
+    int val;
+} SnapEntry;
+
+// Structure for each array element containing its update history
+typedef struct {
+    SnapEntry* history;
+    int size;
+    int capacity;
+} Element;
+
+// Main SnapshotArray object structure
+typedef struct {
+    Element* arr;
+    int length;
+    int snap_cnt;
+} SnapshotArray;
+
+// Initializes the data structure
+SnapshotArray* snapshotArrayCreate(int length) {
+    SnapshotArray* obj = (SnapshotArray*)malloc(sizeof(SnapshotArray));
+    obj->length = length;
+    obj->snap_cnt = 0;
+    obj->arr = (Element*)malloc(length * sizeof(Element));
+    
+    for (int i = 0; i < length; i++) {
+        obj->arr[i].capacity = 4;
+        obj->arr[i].size = 0;
+        obj->arr[i].history = (SnapEntry*)malloc(obj->arr[i].capacity * sizeof(SnapEntry));
+        
+        // Initially, each element equals 0 at snap_id = 0
+        obj->arr[i].history[0].snap_id = 0;
+        obj->arr[i].history[0].val = 0;
+        obj->arr[i].size = 1;
+    }
+    return obj;
+}
+
+// Sets the element at the given index to be equal to val
+void snapshotArraySet(SnapshotArray* obj, int index, int val) {
+    Element* elem = &(obj->arr[index]);
+    
+    // If the last update was in the current snapshot session, just overwrite it
+    if (elem->size > 0 && elem->history[elem->size - 1].snap_id == obj->snap_cnt) {
+        elem->history[elem->size - 1].val = val;
+        return;
+    }
+    
+    // Dynamic resizing if the history array runs out of capacity
+    if (elem->size >= elem->capacity) {
+        elem->capacity *= 2;
+        elem->history = (SnapEntry*)realloc(elem->history, elem->capacity * sizeof(SnapEntry));
+    }
+    
+    // Record the new update for the current snap_cnt
+    elem->history[elem->size].snap_id = obj->snap_cnt;
+    elem->history[elem->size].val = val;
+    elem->size++;
+}
+
+// Takes a snapshot and returns the snap_id
+int snapshotArraySnap(SnapshotArray* obj) {
+    return obj->snap_cnt++;
+}
+
+// Returns the value at the given index at the time of the given snap_id
+int snapshotArrayGet(SnapshotArray* obj, int index, int snap_id) {
+    Element* elem = &(obj->arr[index]);
+    
+    // Binary search to find the latest update <= snap_id
+    int low = 0;
+    int high = elem->size - 1;
+    int ansIndex = 0;
+    
+    while (low <= high) {
+        int mid = low + (high - low) / 2;
+        if (elem->history[mid].snap_id <= snap_id) {
+            ansIndex = mid; // Candidate match found, look for a later one
+            low = mid + 1;
+        } else {
+            high = mid - 1;
+        }
+    }
+    
+    return elem->history[ansIndex].val;
+}
+
+// Free all memory allocated for the SnapshotArray
+void snapshotArrayFree(SnapshotArray* obj) {
+    for (int i = 0; i < obj->length; i++) {
+        free(obj->arr[i].history);
+    }
+    free(obj->arr);
+    free(obj);
+}
