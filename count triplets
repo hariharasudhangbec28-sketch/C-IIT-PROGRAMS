@@ -1,0 +1,122 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define HASH_SIZE 200003 // Large prime number for reducing collisions
+
+// Hash map node definition
+typedef struct HashNode {
+    long long key;
+    long long value;
+    struct HashNode* next;
+} HashNode;
+
+// Hash map structure
+typedef struct {
+    HashNode* table[HASH_SIZE];
+} HashMap;
+
+// Hash function handles large/negative integers safely
+int hash(long long key) {
+    int h = key % HASH_SIZE;
+    if (h < 0) h += HASH_SIZE;
+    return h;
+}
+
+// Retrieves a value from the map
+long long get(HashMap* map, long long key) {
+    int idx = hash(key);
+    HashNode* curr = map->table[idx];
+    while (curr != NULL) {
+        if (curr->key == key) return curr->value;
+        curr = curr->next;
+    }
+    return 0;
+}
+
+// Increments or updates a value in the map
+void put(HashMap* map, long long key, long long val) {
+    int idx = hash(key);
+    HashNode* curr = map->table[idx];
+    while (curr != NULL) {
+        if (curr->key == key) {
+            curr->value = val;
+            return;
+        }
+        curr = curr->next;
+    }
+    HashNode* newNode = (HashNode*)malloc(sizeof(HashNode));
+    newNode->key = key;
+    newNode->value = val;
+    newNode->next = map->table[idx];
+    map->table[idx] = newNode;
+}
+
+// Memory clean up helper
+void freeMap(HashMap* map) {
+    for (int i = 0; i < HASH_SIZE; i++) {
+        HashNode* curr = map->table[i];
+        while (curr != NULL) {
+            HashNode* temp = curr;
+            curr = curr->next;
+            free(temp);
+        }
+    }
+}
+
+/**
+ * Computes total index geometric progression triplets.
+ */
+long long countTriplets(long long* arr, int n, long long r) {
+    HashMap map_left = {{{NULL}}};
+    HashMap map_right = {{{NULL}}};
+    long long total_triplets = 0;
+
+    // 1. Fill map_right with the initial frequency of all elements
+    for (int i = 0; i < n; i++) {
+        put(&map_right, arr[i], get(&map_right, arr[i]) + 1);
+    }
+
+    // 2. Iterate through the array treating each element as the middle item
+    for (int i = 0; i < n; i++) {
+        long long mid = arr[i];
+
+        // An item cannot be to the right of itself, so decrement it from right map
+        put(&map_right, mid, get(&map_right, mid) - 1);
+
+        // Check if a valid integer division exists for the left element (mid / r)
+        if (mid % r == 0) {
+            long long prev = mid / r;
+            long long next = mid * r;
+
+            long long left_count = get(&map_left, prev);
+            long long right_count = get(&map_right, next);
+
+            // Add the combination combinations to our counter
+            total_triplets += left_count * right_count;
+        }
+
+        // Add the current element to the left map as we step forward
+        put(&map_left, mid, get(&map_left, mid) + 1);
+    }
+
+    freeMap(&map_left);
+    freeMap(&map_right);
+    return total_triplets;
+}
+
+int main() {
+    int n;
+    long long r;
+    
+    if (scanf("%d %lld", &n, &r) != 2) return 0;
+
+    long long* arr = (long long*)malloc(n * sizeof(long long));
+    for (int i = 0; i < n; i++) {
+        scanf("%lld", &arr[i]);
+    }
+
+    printf("%lld\n", countTriplets(arr, n, r));
+
+    free(arr);
+    return 0;
+}
