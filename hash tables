@@ -1,0 +1,78 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Comparison function for qsort to sort string arrays alphabetically
+int compareStrings(const void* a, const void* b) {
+    return strcmp(*(const char**)a, *(const char**)b);
+}
+
+/**
+ * Validates if the note words can be completely sourced from the magazine words
+ */
+void checkMagazine(int magazine_count, char** magazine, int note_count, char** note) {
+    // 1. Sort both string sets alphabetically
+    qsort(magazine, magazine_count, sizeof(char*), compareStrings);
+    qsort(note, note_count, sizeof(char*), compareStrings);
+
+    int mag_idx = 0;
+    int note_idx = 0;
+
+    // 2. Linear scan match using two independent tracking indices
+    while (mag_idx < magazine_count && note_idx < note_count) {
+        int res = strcmp(magazine[mag_idx], note[note_idx]);
+        
+        if (res == 0) {
+            mag_idx++;
+            note_idx++;
+        } else if (res < 0) {
+            mag_idx++; // Skip magazine words that are alphabetically lower
+        } else {
+            // Found a word mismatch where magazine skipped ahead of note sequence
+            printf("No\n");
+            return;
+        }
+    }
+
+    // 3. Evaluate terminal matching coverage
+    if (note_idx == note_count) {
+        printf("Yes\n");
+    } else {
+        printf("No\n");
+    }
+}
+
+int main() {
+    int m, n;
+    
+    // Read the total word count constraints for magazine and note
+    if (scanf("%d %d", &m, &n) != 2) {
+        return 0;
+    }
+
+    // Dynamic allocation setup for magazine string buffer arrays
+    char** magazine = (char**)malloc(m * sizeof(char*));
+    for (int i = 0; i < m; i++) {
+        magazine[i] = (char*)malloc(60 * sizeof(char)); // Expects max 50 chars per word + null terminator
+        scanf("%s", magazine[i]);
+    }
+
+    // Dynamic allocation setup for note string buffer arrays
+    char** note = (char**)malloc(n * sizeof(char*));
+    for (int i = 0; i < n; i++) {
+        note[i] = (char*)malloc(60 * sizeof(char));
+        scanf("%s", note[i]);
+    }
+
+    // Process logic execution 
+    checkMagazine(m, magazine, n, note);
+
+    // Deep memory deallocation clean up loop
+    for (int i = 0; i < m; i++) free(magazine[i]);
+    free(magazine);
+    
+    for (int i = 0; i < n; i++) free(note[i]);
+    free(note);
+
+    return 0;
+}
