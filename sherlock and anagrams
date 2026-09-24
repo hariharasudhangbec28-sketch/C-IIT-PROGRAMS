@@ -1,0 +1,84 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// A structural map entry to keep track of substring signatures
+typedef struct {
+    int freq[26];  // Character frequency map for lowercase 'a' through 'z'
+    int count;     // Total times this specific signature layout has appeared
+} SignatureEntry;
+
+// Helper function to check if two frequency signatures are identical
+int is_same_signature(const int* f1, const int* f2) {
+    for (int i = 0; i < 26; i++) {
+        if (f1[i] != f2[i]) return 0;
+    }
+    return 1;
+}
+
+/**
+ * Computes the total number of anagrammatic substring pairs.
+ */
+int sherlockAndAnagrams(char* s) {
+    int len = strlen(s);
+    int total_pairs = 0;
+
+    // Maximum possible unique substrings bounded by string length
+    int max_substrings = (len * (len + 1)) / 2;
+    SignatureEntry* map = (SignatureEntry*)malloc(max_substrings * sizeof(SignatureEntry));
+    int map_size = 0;
+
+    // 1. Iterate through all possible substring lengths
+    for (int sub_len = 1; sub_len < len; sub_len++) {
+        // 2. Slide a window of 'sub_len' across the string
+        for (int i = 0; i <= len - sub_len; i++) {
+            
+            // Build the frequency signature for the current substring window
+            int current_freq[26] = {0};
+            for (int j = 0; j < sub_len; j++) {
+                current_freq[s[i + j] - 'a']++;
+            }
+
+            // Check if this signature layout has already been recorded
+            int found = 0;
+            for (int k = 0; k < map_size; k++) {
+                if (is_same_signature(map[k].freq, current_freq)) {
+                    map[k].count++;
+                    found = 1;
+                    break;
+                }
+            }
+
+            // If it's a completely new signature pattern, append it to our tracking map
+            if (!found) {
+                memcpy(map[map_size].freq, current_freq, sizeof(current_freq));
+                map[map_size].count = 1;
+                map_size++;
+            }
+        }
+    }
+
+    // 3. For each group of identical signatures, calculate pairs: C * (C - 1) / 2
+    for (int i = 0; i < map_size; i++) {
+        int n = map[i].count;
+        if (n > 1) {
+            total_pairs += (n * (n - 1)) / 2;
+        }
+    }
+
+    free(map);
+    return total_pairs;
+}
+
+int main() {
+    int q;
+    if (scanf("%d", &q) != 1) return 0;
+
+    char s[105]; // Buffer to hold input strings (up to 100 characters max)
+    while (q--) {
+        scanf("%s", s);
+        printf("%d\n", sherlockAndAnagrams(s));
+    }
+
+    return 0;
+}
