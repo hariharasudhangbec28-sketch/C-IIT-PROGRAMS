@@ -1,0 +1,131 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define HASH_SIZE 200003 // Large prime size to distribute keys evenly
+
+// Hash node structure for key-value pairings
+typedef struct HashNode {
+    long long key;
+    int value;
+    struct HashNode* next;
+} HashNode;
+
+// Hash map wrapper structure
+typedef struct {
+    HashNode* table[HASH_SIZE];
+} HashMap;
+
+// Hash distribution function
+int hash(long long key) {
+    int h = key % HASH_SIZE;
+    if (h < 0) h += HASH_SIZE;
+    return h;
+}
+
+// Retrieves a value from the hash map, returning 0 if not found
+int get(HashMap* map, long long key) {
+    int idx = hash(key);
+    HashNode* curr = map->table[idx];
+    while (curr != NULL) {
+        if (curr->key == key) return curr->value;
+        curr = curr->next;
+    }
+    return 0;
+}
+
+// Updates or puts a new key-value pair into the map
+void put(HashMap* map, long long key, int val) {
+    int idx = hash(key);
+    HashNode* curr = map->table[idx];
+    while (curr != NULL) {
+        if (curr->key == key) {
+            curr->value = val;
+            return;
+        }
+        curr = curr->next;
+    }
+    HashNode* newNode = (HashNode*)malloc(sizeof(HashNode));
+    newNode->key = key;
+    newNode->value = val;
+    newNode->next = map->table[idx];
+    map->table[idx] = newNode;
+}
+
+// Cleans up dynamic map heap structures to prevent memory leaks
+void freeMap(HashMap* map) {
+    for (int i = 0; i < HASH_SIZE; i++) {
+        HashNode* curr = map->table[i];
+        while (curr != NULL) {
+            HashNode* temp = curr;
+            curr = curr->next;
+            free(temp);
+        }
+    }
+}
+
+int main() {
+    int q;
+    if (scanf("%d", &q) != 1) return 0;
+
+    HashMap quantities_map = {{{NULL}}};
+    HashMap frequencies_map = {{{NULL}}};
+
+    for (int i = 0; i < q; i++) {
+        int type;
+        long long value;
+        if (scanf("%d %lld", &type, &value) != 2) break;
+
+        if (type == 1) {
+            // --- INSERTION ---
+            int old_freq = get(&quantities_map, value);
+            int new_freq = old_freq + 1;
+            
+            put(&quantities_map, value, new_freq);
+
+            // Decrement the tracking count for the old frequency block
+            if (old_freq > 0) {
+                int count_old = get(&frequencies_map, old_freq);
+                if (count_old > 0) put(&frequencies_map, old_freq, count_old - 1);
+            }
+            // Increment the tracking count for the new frequency block
+            put(&frequencies_map, new_freq, get(&frequencies_map, new_freq) + 1);
+
+        } else if (type == 2) {
+            // --- DELETION ---
+            int old_freq = get(&quantities_map, value);
+            if (old_freq > 0) {
+                int new_freq = old_freq - 1;
+                put(&quantities_map, value, new_freq);
+
+                // Reduce the tracking footprint of the old frequency map configuration
+                int count_old = get(&frequencies_map, old_freq);
+                if (count_old > 0) put(&frequencies_map, old_freq, count_old - 1);
+
+                // Add to the tracking state of the new lowered frequency grouping
+                if (new_freq > 0) {
+                    put(&frequencies_map, new_freq, get(&frequencies_map, new_freq) + 1);
+                }
+            }
+
+        } else if (type == 3) {
+            // --- FREQUENCY CHECK ---
+            // If the query frequency value is unreasonably large, it's impossible to match
+            if (value > q) {
+                printf("0\n");
+            } else {
+                int match_found = get(&frequencies_map, value);
+                if (match_found > 0) {
+                    printf("1\n");
+                } else {
+                    printf("0\n");
+                }
+            }
+        }
+    }
+
+    // Clean memory maps
+    freeMap(&quantities_map);
+    freeMap(&frequencies_map);
+
+    return 0;
+}
