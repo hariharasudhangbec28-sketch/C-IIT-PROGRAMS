@@ -1,0 +1,35 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    int n, k;
+    
+    // 1. Read array size (n) and left shifts (k)
+    if (scanf("%d %d", &n, &k) != 2) {
+        return 0;
+    }
+
+    // 2. Dynamically allocate memory for the original array
+    int* arr = (int*)malloc(n * sizeof(int));
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &arr[i]);
+    }
+
+    // 3. Keep tracking the shifting offset
+    k = k % n;
+
+    // 4. Print the elements directly in their new rotated positions
+    for (int i = 0; i < n; i++) {
+        printf("%d", arr[(i + k) % n]);
+        
+        // Print a space after each element except the last one
+        if (i < n - 1) {
+            printf(" ");
+        }
+    }
+    printf("\n");
+
+    // 5. Clean up memory
+    free(arr);
+    return 0;
+}
