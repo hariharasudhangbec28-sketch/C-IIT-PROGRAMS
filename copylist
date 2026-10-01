@@ -1,0 +1,59 @@
+#include <stdlib.h>
+
+/* 
+ * Note: Do not redefine 'struct Node' if your platform already includes it.
+ * This code complies strictly with the standard execution platform template.
+ */
+
+struct Node* copyRandomList(struct Node* head) {
+    if (head == NULL) {
+        return NULL;
+    }
+    
+    struct Node* curr = head;
+    
+    // Step 1: Create a new copied node for each original node and 
+    // interleave it immediately after its original node.
+    // Original: A -> B -> C
+    // Interleaved: A -> A' -> B -> B' -> C -> C'
+    while (curr != NULL) {
+        struct Node* nextNode = curr->next;
+        
+        // Allocate space for the cloned node
+        struct Node* copyNode = (struct Node*)malloc(sizeof(struct Node));
+        copyNode->val = curr->val;
+        copyNode->next = nextNode;
+        copyNode->random = NULL;
+        
+        curr->next = copyNode;
+        curr = nextNode;
+    }
+    
+    // Step 2: Assign random pointers for the copied nodes.
+    // The copied node's random pointer is simply the original node's random pointer's next node.
+    curr = head;
+    while (curr != NULL) {
+        if (curr->random != NULL) {
+            curr->next->random = curr->random->next;
+        }
+        curr = curr->next->next; // Move to the next original node
+    }
+    
+    // Step 3: Separate the interleaved list back into the original list 
+    // and the copied list.
+    curr = head;
+    struct Node* copyHead = head->next;
+    struct Node* copyCurr = copyHead;
+    
+    while (curr != NULL) {
+        curr->next = curr->next->next;
+        curr = curr->next;
+        
+        if (copyCurr->next != NULL) {
+            copyCurr->next = copyCurr->next->next;
+            copyCurr = copyCurr->next;
+        }
+    }
+    
+    return copyHead;
+}
