@@ -1,0 +1,75 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+/**
+ * Return an array of arrays of size *returnSize.
+ * The sizes of the arrays are returned as *returnColumnSizes array.
+ * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().
+ */
+int** mergeArrays(int** nums1, int nums1Size, int* nums1ColSize, int** nums2, int nums2Size, int* nums2ColSize, int* returnSize, int** returnColumnSizes) {
+    // The maximum possible number of unique IDs is the sum of both array lengths
+    int max_capacity = nums1Size + nums2Size;
+    
+    // Allocate memory for the final 2D results array
+    int** result = (int**)malloc(max_capacity * sizeof(int*));
+    *returnColumnSizes = (int*)malloc(max_capacity * sizeof(int));
+    
+    int i = 0; // Pointer for nums1
+    int j = 0; // Pointer for nums2
+    int k = 0; // Pointer for result array
+
+    // Traverse both arrays simultaneously using two pointers
+    while (i < nums1Size && j < nums2Size) {
+        int id1 = nums1[i][0];
+        int val1 = nums1[i][1];
+        int id2 = nums2[j][0];
+        int val2 = nums2[j][1];
+
+        result[k] = (int*)malloc(2 * sizeof(int));
+        (*returnColumnSizes)[k] = 2;
+
+        if (id1 == id2) {
+            // IDs are matching: Sum their values and advance both pointers
+            result[k][0] = id1;
+            result[k][1] = val1 + val2;
+            i++;
+            j++;
+        } else if (id1 < id2) {
+            // ID from nums1 is smaller: Take it and advance pointer i
+            result[k][0] = id1;
+            result[k][1] = val1;
+            i++;
+        } else {
+            // ID from nums2 is smaller: Take it and advance pointer j
+            result[k][0] = id2;
+            result[k][1] = val2;
+            j++;
+        }
+        k++; // Move to next position in the result array
+    }
+
+    // Collect any remaining elements from nums1
+    while (i < nums1Size) {
+        result[k] = (int*)malloc(2 * sizeof(int));
+        (*returnColumnSizes)[k] = 2;
+        result[k][0] = nums1[i][0];
+        result[k][1] = nums1[i][1];
+        i++;
+        k++;
+    }
+
+    // Collect any remaining elements from nums2
+    while (j < nums2Size) {
+        result[k] = (int*)malloc(2 * sizeof(int));
+        (*returnColumnSizes)[k] = 2;
+        result[k][0] = nums2[j][0];
+        result[k][1] = nums2[j][1];
+        j++;
+        k++;
+    }
+
+    // Set the total size of rows being returned
+    *returnSize = k;
+
+    return result;
+}
