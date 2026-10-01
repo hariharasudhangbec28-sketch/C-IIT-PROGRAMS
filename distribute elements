@@ -1,0 +1,58 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+/**
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+int* resultArray(int* nums, int numsSize, int* returnSize) {
+    // Handle edge case where there are fewer than 2 elements
+    if (numsSize <= 2) {
+        *returnSize = numsSize;
+        int* res = (int*)malloc(numsSize * sizeof(int));
+        for (int i = 0; i < numsSize; i++) {
+            res[i] = nums[i];
+        }
+        return res;
+    }
+
+    // Allocate max possible memory for both temporary arrays
+    int* arr1 = (int*)malloc(numsSize * sizeof(int));
+    int* arr2 = (int*)malloc(numsSize * sizeof(int));
+    
+    int size1 = 0;
+    int size2 = 0;
+
+    // Operation 1: append nums[0] to arr1 (0-indexed logic mapping to 1-indexed problem statement)
+    arr1[size1++] = nums[0];
+    // Operation 2: append nums[1] to arr2
+    arr2[size2++] = nums[1];
+
+    // Process operations 3 to n
+    for (int i = 2; i < numsSize; i++) {
+        // Compare the last element of arr1 and arr2
+        if (arr1[size1 - 1] > arr2[size2 - 1]) {
+            arr1[size1++] = nums[i];
+        } else {
+            arr2[size2++] = nums[i];
+        }
+    }
+
+    // Allocate space for the final result array
+    int* result = (int*)malloc(numsSize * sizeof(int));
+    *returnSize = numsSize;
+
+    // Concatenate arr1 and arr2 into result
+    int idx = 0;
+    for (int i = 0; i < size1; i++) {
+        result[idx++] = arr1[i];
+    }
+    for (int i = 0; i < size2; i++) {
+        result[idx++] = arr2[i];
+    }
+
+    // Free the temporary memory blocks
+    free(arr1);
+    free(arr2);
+
+    return result;
+}
