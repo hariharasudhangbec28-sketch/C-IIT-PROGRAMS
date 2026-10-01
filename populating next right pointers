@@ -1,0 +1,45 @@
+#include <stdlib.h>
+
+/* 
+ * Note: Do not redefine 'struct Node' if your platform already includes it.
+ * This code complies strictly with the C function runner format.
+ */
+
+struct Node* connect(struct Node* root) {
+    if (root == NULL) {
+        return NULL;
+    }
+    
+    // Start with the root node at the top level
+    struct Node *curr = root;
+    
+    while (curr != NULL) {
+        // A dummy node acts as a placeholder anchoring the start of the next level down
+        struct Node dummy;
+        dummy.next = NULL;
+        struct Node *prev = &dummy;
+        
+        // Traverse horizontally across the current level using its next pointers
+        while (curr != NULL) {
+            // If the left child exists, link it into the next level's list
+            if (curr->left != NULL) {
+                prev->next = curr->left;
+                prev = prev->next;
+            }
+            
+            // If the right child exists, link it into the next level's list
+            if (curr->right != NULL) {
+                prev->next = curr->right;
+                prev = prev->next;
+            }
+            
+            // Move to the next node in the current level
+            curr = curr->next;
+        }
+        
+        // Move down to the start of the next level we just constructed
+        curr = dummy.next;
+    }
+    
+    return root;
+}
