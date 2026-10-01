@@ -1,0 +1,72 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MOD 1000000007
+
+int numberOfStableArrays(int num_zeros, int num_ones, int limit) {
+    // dp[i][j][0] stores stable configurations with i zeros and j ones ending in 0
+    // dp[i][j][1] stores stable configurations with i zeros and j ones ending in 1
+    // Using dynamically allocated 3D arrays to stay within stack limits
+    int*** dp = (int***)malloc((num_zeros + 1) * sizeof(int**));
+    for (int i = 0; i <= num_zeros; i++) {
+        dp[i] = (int**)malloc((num_ones + 1) * sizeof(int*));
+        for (int j = 0; j <= num_ones; j++) {
+            dp[i][j] = (int*)calloc(2, sizeof(int));
+        }
+    }
+
+    // Base cases
+    // Strings consisting entirely of 0s up to the limit
+    for (int i = 1; i <= num_zeros && i <= limit; i++) {
+        dp[i][0][0] = 1;
+    }
+    // Strings consisting entirely of 1s up to the limit
+    for (int j = 1; j <= num_ones && j <= limit; j++) {
+        dp[0][j][1] = 1;
+    }
+
+    // Fill the DP table
+    for (int i = 1; i <= num_zeros; i++) {
+        for (int j = 1; j <= num_ones; j++) {
+            
+            // --- Case 1: Ending with a '0' ---
+            // To append a 0, the previous element could be either 0 or 1.
+            // dp[i][j][0] = dp[i-1][j][0] + dp[i-1][j][1]
+            // However, we must subtract sequences that would create > limit consecutive 0s.
+            // Invalid sequences have exactly 'limit' consecutive 0s before this addition, 
+            // which implies they came from a '1' at step (i - 1 - limit).
+            long long val0 = (long long)dp[i - 1][j][0] + dp[i - 1][j][1];
+            if (i - 1 - limit >= 0) {
+                val0 -= dp[i - 1 - limit][j][1];
+            } else if (i - 1 - limit == -1 && j > 0) {
+                // If it traces back exactly to the start, subtract the all-zero base sequence
+                val0 -= (j == 0 ? 0 : 0); // accounted for by bounds if initial configuration exceeded
+            }
+            // Ensure no negative values after subtraction before applying modulo
+            dp[i][j][0] = (int)((val0 % MOD + MOD) % MOD);
+
+            // --- Case 2: Ending with a '1' ---
+            // Simmilar logic for appending a 1.
+            long long val1 = (long long)dp[i][j - 1][0] + dp[i][j - 1][1];
+            if (j - 1 - limit >= 0) {
+                val1 -= dp[i][j - 1 - limit][0];
+            }
+            dp[i][j][1] = (int)((val1 % MOD + MOD) % MOD);
+        }
+    }
+
+    // The total number of valid configurations is the sum of choices ending in 0 and 1
+    int result = (dp[num_zeros][num_ones][0] + dp[num_zeros][num_ones][1]) % MOD;
+
+    // Free allocated memory
+    for (int i = 0; i <= num_zeros; i++) {
+        for (int j = 0; j <= num_ones; j++) {
+            free(dp[i][j]);
+        }
+        free(dp[i]);
+    }
+    free(dp);
+
+    return result;
+}
