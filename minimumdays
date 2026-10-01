@@ -1,0 +1,36 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Fixed function name to match the platform's driver code exactly
+int minDays(int n) {
+    // dp[i] will store the minimum days needed to get exactly i points
+    int* dp = (int*)malloc((n + 1) * sizeof(int));
+    for (int i = 0; i <= n; i++) {
+        dp[i] = 1e9; // Initialize with a large value representing infinity
+    }
+    dp[0] = 0;
+    
+    // Compute the minimum days for each score from 0 up to n
+    for (int i = 0; i <= n; i++) {
+        if (dp[i] == 1e9) continue; // Skip unreachable states
+        
+        long long L = 1;
+        while (1) {
+            long long pts = L * (L + 1) / 2;
+            if (i + pts > n) break; // Exceeding target score
+            
+            // If i == 0, this is the first streak (takes L days)
+            // Otherwise, we need 1 skip day + L streak days (takes L + 1 days)
+            int cost = (i == 0) ? L : (L + 1);
+            
+            if (dp[i] + cost < dp[i + pts]) {
+                dp[i + pts] = dp[i] + cost;
+            }
+            L++;
+        }
+    }
+    
+    int result = dp[n];
+    free(dp); // Clean up dynamically allocated memory
+    return result;
+}
