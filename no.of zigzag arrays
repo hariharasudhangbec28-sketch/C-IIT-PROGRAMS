@@ -1,0 +1,65 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MOD 1000000007
+
+int zigZagArrays(int n, int l, int r) {
+    int m = r - l + 1;
+    
+    // For n = 1, any single choice is technically valid
+    if (n == 1) {
+        return m;
+    }
+    
+    // up[i] handles states ending at index i after an increasing transition
+    // down[i] handles states ending at index i after a decreasing transition
+    long long* up = (long long*)calloc(m, sizeof(long long));
+    long long* down = (long long*)calloc(m, sizeof(long long));
+    
+    // Base Case: For a length of 2, any pair of distinct elements is a valid start
+    for (int i = 0; i < m; i++) {
+        up[i] = i;              // Counts elements smaller than i: elements from 0 to i-1
+        down[i] = (m - 1 - i);  // Counts elements larger than i: elements from i+1 to m-1
+    }
+    
+    // Temporary helper arrays to track prefix/suffix transitions efficiently
+    long long* next_up = (long long*)malloc(m * sizeof(long long));
+    long long* next_down = (long long*)malloc(m * sizeof(long long));
+    
+    // Transition for lengths from 3 up to n
+    for (int step = 3; step <= n; step++) {
+        // Compute prefix sums for down transitions to optimize the next_up states
+        long long current_prefix = 0;
+        for (int i = 0; i < m; i++) {
+            next_up[i] = current_prefix;
+            current_prefix = (current_prefix + down[i]) % MOD;
+        }
+        
+        // Compute suffix sums for up transitions to optimize the next_down states
+        long long current_suffix = 0;
+        for (int i = m - 1; i >= 0; i--) {
+            next_down[i] = current_suffix;
+            current_suffix = (current_suffix + up[i]) % MOD;
+        }
+        
+        // Swap or assign buffers to update current DP arrays
+        for (int i = 0; i < m; i++) {
+            up[i] = next_up[i];
+            down[i] = next_down[i];
+        }
+    }
+    
+    // Aggregate all possible ending positions to get the total valid count
+    long long total_valid_arrays = 0;
+    for (int i = 0; i < m; i++) {
+        total_valid_arrays = (total_valid_arrays + up[i] + down[i]) % MOD;
+    }
+    
+    // Free allocated memory
+    free(up);
+    free(down);
+    free(next_up);
+    free(next_down);
+    
+    return (int)total_valid_arrays;
+}
