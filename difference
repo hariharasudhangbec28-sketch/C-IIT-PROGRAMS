@@ -1,0 +1,50 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+/**
+ * Return an array of arrays of size *returnSize.
+ * The sizes of the arrays are returned as *returnColumnSizes array.
+ * Note: Both returned array and *columnSizes array must be malloced, assume caller calls free().
+ */
+int** findDifference(int* nums1, int nums1Size, int* nums2, int nums2Size, int* returnSize, int** returnColumnSizes) {
+    // Offset for handling negative numbers (maps -1000 to 0, and 1000 to 2000)
+    #define OFFSET 1000
+    #define RANGE 2001
+
+    bool hasNums1[RANGE] = {false};
+    bool hasNums2[RANGE] = {false};
+
+    // Mark present elements
+    for (int i = 0; i < nums1Size; i++) hasNums1[nums1[i] + OFFSET] = true;
+    for (int i = 0; i < nums2Size; i++) hasNums2[nums2[i] + OFFSET] = true;
+
+    // Allocate memory for the answers
+    int** answer = (int**)malloc(2 * sizeof(int*));
+    *returnColumnSizes = (int*)malloc(2 * sizeof(int));
+    *returnSize = 2;
+
+    answer[0] = (int*)malloc(nums1Size * sizeof(int));
+    answer[1] = (int*)malloc(nums2Size * sizeof(int));
+
+    int count0 = 0, count1 = 0;
+
+    // Collect distinct elements from nums1 not in nums2
+    for (int i = 0; i < RANGE; i++) {
+        if (hasNums1[i] && !hasNums2[i]) {
+            answer[0][count0++] = i - OFFSET;
+        }
+    }
+
+    // Collect distinct elements from nums2 not in nums1
+    for (int i = 0; i < RANGE; i++) {
+        if (hasNums2[i] && !hasNums1[i]) {
+            answer[1][count1++] = i - OFFSET;
+        }
+    }
+
+    (*returnColumnSizes)[0] = count0;
+    (*returnColumnSizes)[1] = count1;
+
+    return answer;
+}
