@@ -1,0 +1,87 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define HASH_SIZE 200003  // A prime number for the hash table size
+
+// Structure to store coordinates in the hash table
+typedef struct HashNode {
+    long long key; 
+    struct HashNode* next;
+} HashNode;
+
+// Helper function to insert a coordinate into the custom hash table
+int insertHash(HashNode** hashTable, int x, int y) {
+    // Offset negative coordinates to make them strictly positive integers 
+    // This allows safe 64-bit key mapping without risky bit-shifting operations
+    long long cx = x + 1000000000LL;
+    long long cy = y + 1000000000LL;
+    
+    // Pack two coordinates safely into a single 64-bit key
+    long long key = cx * 3000000000LL + cy;
+    
+    // Compute bucket index safely using unsigned representation or absolute mapping
+    unsigned int hashIdx = (unsigned int)((key < 0 ? -key : key) % HASH_SIZE);
+    
+    // Check if the key already exists
+    HashNode* curr = hashTable[hashIdx];
+    while (curr != NULL) {
+        if (curr->key == key) {
+            return 0; // Already exists, not distinct
+        }
+        curr = curr->next;
+    }
+    
+    // Insert new unique coordinate node
+    HashNode* newNode = (HashNode*)malloc(sizeof(HashNode));
+    newNode->key = key;
+    newNode->next = hashTable[hashIdx];
+    hashTable[hashIdx] = newNode;
+    return 1; 
+}
+
+int distinctPoints(char* s, int k) {
+    int n = strlen(s);
+    
+    int* f = (int*)calloc(n + 1, sizeof(int));
+    int* g = (int*)calloc(n + 1, sizeof(int));
+    
+    int x = 0, y = 0;
+    for (int i = 0; s[i] != '\0'; i++) {
+        if (s[i] == 'U') y++;
+        else if (s[i] == 'D') y--;
+        else if (s[i] == 'L') x--;
+        else if (s[i] == 'R') x++;
+        
+        f[i + 1] = x;
+        g[i + 1] = y;
+    }
+    
+    int total_x = x;
+    int total_y = y;
+    
+    HashNode** hashTable = (HashNode**)calloc(HASH_SIZE, sizeof(HashNode*));
+    int distinct_count = 0;
+    
+    for (int i = k; i <= n; i++) {
+        int final_x = total_x - (f[i] - f[i - k]);
+        int final_y = total_y - (g[i] - g[i - k]);
+        
+        distinct_count += insertHash(hashTable, final_x, final_y);
+    }
+    
+    // Cleanup allocations to avoid leaks
+    for (int i = 0; i < HASH_SIZE; i++) {
+        HashNode* curr = hashTable[i];
+        while (curr != NULL) {
+            HashNode* temp = curr;
+            curr = curr->next;
+            free(temp);
+        }
+    }
+    free(hashTable);
+    free(f);
+    free(g);
+    
+    return distinct_count;
+}
