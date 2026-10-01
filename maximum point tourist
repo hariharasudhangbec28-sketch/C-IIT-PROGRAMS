@@ -1,0 +1,47 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Use a custom unique name to avoid macro redefinition conflicts
+#define MY_MAX(a, b) ((a) > (b) ? (a) : (b))
+
+// Fixed function name to match the platform's driver code exactly
+int maxScore(int n, int k, int** stayScore, int stayScoreSize, int* stayScoreColSize, int** travelScore, int travelScoreSize, int* travelScoreColSize) {
+    // dp[j] stores the maximum score at city j at the end of the current day
+    int* dp = (int*)calloc(n, sizeof(int));
+    int* next_dp = (int*)malloc(n * sizeof(int));
+    
+    // Process each day from 0 to k-1
+    for (int d = 0; d < k; d++) {
+        for (int curr = 0; curr < n; curr++) {
+            // Option 1: The tourist was already at 'curr' yesterday and decides to stay
+            int max_from_stay = dp[curr] + stayScore[d][curr];
+            
+            // Option 2: The tourist traveled from some other city 'prev' to 'curr' today
+            int max_from_travel = 0;
+            for (int prev = 0; prev < n; prev++) {
+                if (prev != curr) {
+                    max_from_travel = MY_MAX(max_from_travel, dp[prev] + travelScore[prev][curr]);
+                }
+            }
+            
+            // The best score for ending at 'curr' today is the max of both options
+            next_dp[curr] = MY_MAX(max_from_stay, max_from_travel);
+        }
+        
+        // Copy next_dp values into dp for the next day's iteration
+        memcpy(dp, next_dp, n * sizeof(int));
+    }
+    
+    // Find the global maximum score across all cities at the end of day k-1
+    int max_points = 0;
+    for (int j = 0; j < n; j++) {
+        max_points = MY_MAX(max_points, dp[j]);
+    }
+    
+    // Free dynamic memory allocations
+    free(dp);
+    free(next_dp);
+    
+    return max_points;
+}
