@@ -1,0 +1,89 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define HASH_SIZE 100003 // Prime number for hash table sizing
+
+// Structure to store unique coordinate frequencies in the hash table
+typedef struct HashNode {
+    long long key; // Packed (x, y) coordinate
+    int count;
+    struct HashNode* next;
+} HashNode;
+
+// Generate a unique 64-bit key safely combining x and y coordinates
+long long makeKey(int x, int y) {
+    return ((long long)x << 32) | (unsigned int)y;
+}
+
+// Function to find the frequency of a target coordinate in the hash map
+int getCount(HashNode** hashTable, long long key) {
+    unsigned int hashIdx = (unsigned int)((key < 0 ? -key : key) % HASH_SIZE);
+    HashNode* curr = hashTable[hashIdx];
+    while (curr != NULL) {
+        if (curr->key == key) {
+            return curr->count;
+        }
+        curr = curr->next;
+    }
+    return 0;
+}
+
+// Function to insert/increment a coordinate in the hash map
+void insertHash(HashNode** hashTable, long long key) {
+    unsigned int hashIdx = (unsigned int)((key < 0 ? -key : key) % HASH_SIZE);
+    HashNode* curr = hashTable[hashIdx];
+    while (curr != NULL) {
+        if (curr->key == key) {
+            curr->count++;
+            return;
+        }
+        curr = curr->next;
+    }
+    
+    // Node doesn't exist, create a new entry
+    HashNode* newNode = (HashNode*)malloc(sizeof(HashNode));
+    newNode->key = key;
+    newNode->count = 1;
+    newNode->next = hashTable[hashIdx];
+    hashTable[hashIdx] = newNode;
+}
+
+int countPairs(int** coordinates, int coordinatesSize, int* coordinatesColSize, int k) {
+    HashNode** hashTable = (HashNode**)calloc(HASH_SIZE, sizeof(HashNode*));
+    long long totalPairs = 0;
+    
+    for (int i = 0; i < coordinatesSize; i++) {
+        int x = coordinates[i][0];
+        int y = coordinates[i][1];
+        
+        // Try all combinations of a + b = k
+        for (int a = 0; a <= k; a++) {
+            int b = k - a;
+            
+            // Find what the previous complementary coordinate would have to be
+            int targetX = x ^ a;
+            int targetY = y ^ b;
+            long long targetKey = makeKey(targetX, targetY);
+            
+            // Add any matching previous elements to our solution count
+            totalPairs += getCount(hashTable, targetKey);
+        }
+        
+        // Insert current coordinate into hash table for future point matching
+        long long currentKey = makeKey(x, y);
+        insertHash(hashTable, currentKey);
+    }
+    
+    // Memory cleanup
+    for (int i = 0; i < HASH_SIZE; i++) {
+        HashNode* curr = hashTable[i];
+        while (curr != NULL) {
+            HashNode* temp = curr;
+            curr = curr->next;
+            free(temp);
+        }
+    }
+    free(hashTable);
+    
+    return (int)totalPairs;
+}
