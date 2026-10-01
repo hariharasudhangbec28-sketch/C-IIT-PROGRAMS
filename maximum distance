@@ -1,0 +1,31 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+int maxDistance(int** arrays, int arraysSize, int* arraysColSize) {
+    // Initialize global min and max with the first array's boundaries
+    int global_min = arrays[0][0];
+    int global_max = arrays[0][arraysColSize[0] - 1];
+    int max_dist = 0;
+    
+    // Iterate through the remaining arrays
+    for (int i = 1; i < arraysSize; i++) {
+        int current_min = arrays[i][0];
+        int current_max = arrays[i][arraysColSize[i] - 1];
+        
+        // Option 1: Current array's max minus the global min seen so far
+        int dist1 = abs(current_max - global_min);
+        // Option 2: Global max seen so far minus the current array's min
+        int dist2 = abs(global_max - current_min);
+        
+        // Update the maximum distance found
+        if (dist1 > max_dist) max_dist = dist1;
+        if (dist2 > max_dist) max_dist = dist2;
+        
+        // Update global bounds for the next arrays
+        if (current_min < global_min) global_min = current_min;
+        if (current_max > global_max) global_max = current_max;
+    }
+    
+    return max_dist;
+}
