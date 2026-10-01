@@ -1,0 +1,62 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+
+// Comparison function for sorting
+int compare(const void* a, const void* b) {
+    return (*(int*)a - *(int*)b);
+}
+
+// Helper function to check if a number is a perfect square
+int isPerfectSquare(long long num) {
+    long long r = (long long)sqrt(num);
+    return (r * r == num);
+}
+
+void backtrack(int* nums, int numsSize, int* visited, int lastVal, int depth, int* totalCount) {
+    // If we've successfully placed all elements, we found a valid permutation
+    if (depth == numsSize) {
+        (*totalCount)++;
+        return;
+    }
+
+    for (int i = 0; i < numsSize; i++) {
+        // Skip if already used
+        if (visited[i]) continue;
+        
+        // Skip duplicates to ensure unique permutations
+        if (i > 0 && nums[i] == nums[i - 1] && !visited[i - 1]) continue;
+
+        // Check if the sum with the previous element forms a perfect square
+        if (depth > 0) {
+            long long sum = (long long)lastVal + nums[i];
+            if (!isPerfectSquare(sum)) continue;
+        }
+
+        // Make choice
+        visited[i] = 1;
+        
+        // Move to the next depth
+        backtrack(nums, numsSize, visited, nums[i], depth + 1, totalCount);
+        
+        // Undo choice (backtrack)
+        visited[i] = 0;
+    }
+}
+
+int numSquarefulPerms(int* nums, int numsSize) {
+    // 1. Sort the array to group duplicates together
+    qsort(nums, numsSize, sizeof(int), compare);
+
+    // 2. Setup tracking arrays
+    int* visited = (int*)calloc(numsSize, sizeof(int));
+    int totalCount = 0;
+
+    // 3. Initiate backtracking
+    backtrack(nums, numsSize, visited, -1, 0, &totalCount);
+
+    // Free allocated memory
+    free(visited);
+
+    return totalCount;
+}
