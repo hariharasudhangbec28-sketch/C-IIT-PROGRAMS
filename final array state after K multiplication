@@ -1,0 +1,259 @@
+#define MOD 1000000007
+
+typedef long long ll;
+
+static int g_mult;   /* set before using comparators */
+
+/* forward declaration of compare helper */
+static int compare_nodes(int a1, ll c1, int idx1,
+			 int a2, ll c2, int idx2);
+
+/* min heap for the simulation */
+typedef struct {
+	int a;
+	ll c;
+	int idx;
+} node;
+
+typedef struct {
+	node *data;
+	int size;
+	int cap;
+} min_heap;
+
+static void heap_init(min_heap *h, int cap)
+{
+	h->data = (node *)malloc(cap * sizeof(node));
+	h->size = 0;
+	h->cap = cap;
+}
+
+static void heap_free(min_heap *h)
+{
+	free(h->data);
+}
+
+static void heap_swap(node *x, node *y)
+{
+	node t = *x; *x = *y; *y = t;
+}
+
+/* true if a < b according to current state */
+static bool node_less(const node *a, const node *b)
+{
+	return compare_nodes(a->a, a->c, a->idx,
+			     b->a, b->c, b->idx) < 0;
+}
+
+static void heap_sift_up(min_heap *h, int pos)
+{
+	while (pos > 0) {
+		int par = (pos - 1) / 2;
+		if (node_less(&h->data[pos], &h->data[par])) {
+			heap_swap(&h->data[pos], &h->data[par]);
+			pos = par;
+		} else
+			break;
+	}
+}
+
+static void heap_push(min_heap *h, node v)
+{
+	h->data[h->size] = v;
+	heap_sift_up(h, h->size);
+	h->size++;
+}
+
+static void heap_sift_down(min_heap *h, int pos)
+{
+	int n = h->size;
+	while (1) {
+		int smallest = pos;
+		int left = 2 * pos + 1;
+		int right = 2 * pos + 2;
+		if (left < n && node_less(&h->data[left], &h->data[smallest]))
+			smallest = left;
+		if (right < n && node_less(&h->data[right], &h->data[smallest]))
+			smallest = right;
+		if (smallest == pos)
+			break;
+		heap_swap(&h->data[pos], &h->data[smallest]);
+		pos = smallest;
+	}
+}
+
+static node heap_pop(min_heap *h)
+{
+	node top = h->data[0];
+	h->data[0] = h->data[h->size - 1];
+	h->size--;
+	heap_sift_down(h, 0);
+	return top;
+}
+
+static node heap_peek(const min_heap *h)
+{
+	return h->data[0];
+}
+
+/* comparison core */
+static int compare_nodes(int a1, ll c1, int idx1,
+			 int a2, ll c2, int idx2)
+{
+	if (c1 == c2) {
+		if (a1 != a2)
+			return (a1 < a2) ? -1 : 1;
+		if (idx1 != idx2)
+			return (idx1 < idx2) ? -1 : 1;
+		return 0;
+	}
+	/* order c1 < c2 case */
+	if (c1 > c2)
+		return -compare_nodes(a2, c2, idx2, a1, c1, idx1);
+
+	/* c1 < c2: compare a1 * m^c1  vs  a2 * m^c2
+	   equivalent to a1  vs  a2 * m^(c2-c1) */
+	ll diff = c2 - c1;
+	/* safety limit: m^diff is huge for diff > 30, definitely > a1 */
+	if (diff > 30)
+		return -1;	/* a1 < a2 * m^diff */
+	ll rhs = a2;
+	for (ll i = 0; i < diff; i++) {
+		if (rhs > LLONG_MAX / g_mult) {
+			/* overflow -> rhs is astronomically large */
+			return -1;
+		}
+		rhs *= g_mult;
+	}
+	if (a1 < rhs) return -1;
+	if (a1 > rhs) return 1;
+	/* values equal, tie by index */
+	return (idx1 < idx2) ? -1 : (idx1 > idx2 ? 1 : 0);
+}
+
+/* is (a1 * m^c1) > (a2 * m^c2) ? */
+static int greater_than(int a1, ll c1, int a2, ll c2)
+{
+	/* reuse compare_nodes but ignore index, only value */
+	int dummy1 = 0, dummy2 = 0;
+	int cmp = compare_nodes(a1, c1, dummy1, a2, c2, dummy2);
+	/* compare_nodes ignores index when values equal, still might be equal */
+	return cmp > 0;
+}
+
+/* qsort comparison for indices after simulation */
+struct sort_elem {
+	int a;
+	ll c;
+	int idx;
+};
+
+static int cmp_for_qsort(const void *x, const void *y)
+{
+	const struct sort_elem *e1 = (const struct sort_elem *)x;
+	const struct sort_elem *e2 = (const struct sort_elem *)y;
+	return compare_nodes(e1->a, e1->c, e1->idx,
+			     e2->a, e2->c, e2->idx);
+}
+
+/* fast pow modulo */
+static ll pm(ll a, ll b)
+{
+	ll res = 1;
+	a %= MOD;
+	while (b) {
+		if (b & 1)
+			res = (res * a) % MOD;
+		a = (a * a) % MOD;
+		b >>= 1;
+	}
+	return res;
+}
+
+int* getFinalState(int* nums, int numsSize, int k, int multiplier,
+		   int* returnSize)
+{
+	*returnSize = numsSize;
+	int *ans = (int *)malloc(numsSize * sizeof(int));
+	if (multiplier == 1) {
+		for (int i = 0; i < numsSize; i++)
+			ans[i] = nums[i] % MOD;
+		return ans;
+	}
+
+	g_mult = multiplier;	/* set global for comparators */
+
+	/* exponent counts for every index */
+	ll *ops = (ll *)calloc(numsSize, sizeof(ll));
+	/* find initial maximum (a_max, c_max=0) */
+	int max_a = nums[0];
+	int max_idx = 0;
+	for (int i = 1; i < numsSize; i++) {
+		if (nums[i] > max_a) {
+			max_a = nums[i];
+			max_idx = i;
+		}
+	}
+	ll max_c = 0;		/* c for max element, initially 0 */
+
+	min_heap heap;
+	heap_init(&heap, numsSize);
+	for (int i = 0; i < numsSize; i++) {
+		node v = { nums[i], 0, i };
+		heap_push(&heap, v);
+	}
+
+	/* phase 1: simulate step by step */
+	while (k > 0) {
+		node cur = heap_peek(&heap);
+		/* check if after multiplying min we exceed current maximum */
+		if (greater_than(cur.a, cur.c + 1, max_a, max_c)) {
+			/* fast forward possible */
+			break;
+		}
+		cur = heap_pop(&heap);
+		ops[cur.idx]++;
+		cur.c++;
+		/* update max if needed */
+		if (greater_than(cur.a, cur.c, max_a, max_c)) {
+			max_a = cur.a;
+			max_c = cur.c;
+			max_idx = cur.idx;
+		}
+		heap_push(&heap, cur);
+		k--;
+	}
+
+	/* phase 2: handle remaining k */
+	if (k > 0) {
+		/* build array of current states for sorting */
+		struct sort_elem *el = (struct sort_elem *)
+			malloc(numsSize * sizeof(struct sort_elem));
+		for (int i = 0; i < numsSize; i++) {
+			el[i].a = nums[i];
+			el[i].c = ops[i];
+			el[i].idx = i;
+		}
+		/* sort according to current values */
+		qsort(el, numsSize, sizeof(struct sort_elem), cmp_for_qsort);
+
+		ll add_all = k / numsSize;
+		int rem = (int)(k % numsSize);
+		for (int i = 0; i < numsSize; i++) {
+			ops[el[i].idx] += add_all;
+			if (i < rem)
+				ops[el[i].idx]++;
+		}
+		free(el);
+	}
+
+	/* build answer modulo */
+	for (int i = 0; i < numsSize; i++) {
+		ll mul = pm(multiplier, ops[i]);
+		ans[i] = (int)((nums[i] * mul) % MOD);
+	}
+
+	free(ops);
+	heap_free(&heap);
+	return ans;
+}
