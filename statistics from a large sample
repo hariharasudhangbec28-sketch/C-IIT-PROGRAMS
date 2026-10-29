@@ -1,0 +1,53 @@
+/**
+ * Note: The returned array must be malloced, assume caller calls free().
+ */
+double* sampleStats(int* count, int countSize, int* returnSize) {
+    double* res = (double*)malloc(5 * sizeof(double));
+    *returnSize = 5;
+
+    long long total = 0;
+    long long sum = 0;
+    int minVal = -1, maxVal = -1;
+    int mode = 0;
+    int maxFreq = 0;
+
+    for (int i = 0; i < 256; i++) {
+        if (count[i] > 0) {
+            if (minVal == -1) minVal = i;
+            maxVal = i;
+            if (count[i] > maxFreq) {
+                maxFreq = count[i];
+                mode = i;
+            }
+        }
+        total += count[i];
+        sum += (long long)i * count[i];
+    }
+
+    double mean = (double)sum / total;
+
+   long long leftPos = (total + 1) / 2;
+   long long rightPos = total / 2 + 1;
+
+   int m1 = -1, m2 = -1;
+   long long cumulative = 0;
+   for (int i = 0; i < 256; i++) {
+    cumulative += count[i];
+    if (m1 == -1 && cumulative >= leftPos) m1 = i;
+    if (m2 == -1 && cumulative >= rightPos) {
+        m2 = i;
+        break;
+    }
+   }
+
+   double median = (m1 + m2) / 2.0;
+
+   res[0] = (double)minVal;
+   res[1] = (double)maxVal;
+   res[2] = mean;
+   res[3] = median;
+   res[4] = (double)mode;
+
+   return res;
+
+}
